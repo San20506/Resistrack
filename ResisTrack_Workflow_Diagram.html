@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResisTrack — Workflow Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0F172A; color: #E2E8F0; min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, #1E3A5F 0%, #6B21A8 100%);
+    padding: 28px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header h1 { font-size: 28px; font-weight: 800; letter-spacing: 1px; }
+  .header p { font-size: 13px; color: #CBD5E1; margin-top: 4px; }
+  .badge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px; padding: 6px 16px; font-size: 12px; font-weight: 600; }
+
+  .legend {
+    display: flex; gap: 16px; flex-wrap: wrap; padding: 16px 40px;
+    background: #1E293B; border-bottom: 1px solid #334155;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94A3B8; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+
+  .canvas {
+    padding: 40px;
+    overflow-x: auto;
+  }
+
+  .flow-wrapper {
+    display: flex;
+    gap: 0;
+    align-items: flex-start;
+    min-width: 1100px;
+  }
+
+  /* COLUMNS */
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .col-wide { width: 200px; }
+  .col-narrow { width: 80px; justify-content: center; }
+
+  /* NODES */
+  .node {
+    width: 180px;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.5;
+    border: 1.5px solid transparent;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: default;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+  .node-title { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
+  .node-sub { font-size: 10.5px; color: #CBD5E1; }
+
+  .node-hospital { background: #1E3A5F; border-color: #3B82F6; }
+  .node-hospital .node-title { color: #93C5FD; }
+
+  .node-transform { background: #1A1A3E; border-color: #818CF8; }
+  .node-transform .node-title { color: #A5B4FC; }
+
+  .node-security { background: #2D1B4E; border-color: #A855F7; }
+  .node-security .node-title { color: #D8B4FE; }
+
+  .node-aws { background: #1A2E1A; border-color: #22C55E; }
+  .node-aws .node-title { color: #86EFAC; }
+
+  .node-ml { background: #2D1B00; border-color: #F59E0B; }
+  .node-ml .node-title { color: #FCD34D; }
+
+  .node-storage { background: #1A2A2A; border-color: #06B6D4; }
+  .node-storage .node-title { color: #67E8F9; }
+
+  .node-auth { background: #2D1B4E; border-color: #EC4899; }
+  .node-auth .node-title { color: #F9A8D4; }
+
+  .node-output { background: #1A2A3E; border-color: #0EA5E9; }
+  .node-output .node-title { color: #7DD3FC; }
+
+  /* ARROWS */
+  .arrow-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    flex-shrink: 0;
+    gap: 0;
+  }
+  .arrow-down {
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    color: #64748B; font-size: 10px; text-align: center;
+    margin: 6px 0;
+  }
+  .arrow-line { width: 2px; background: #475569; flex: 1; min-height: 20px; }
+  .arrow-head { width: 0; height: 0; border-left: 6px solid transparent;
+    border-right: 6px solid transparent; border-top: 8px solid #475569; }
+  .arrow-label { color: #64748B; font-size: 9px; margin: 2px 0; }
+
+  .arrow-right {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; min-height: 60px;
+  }
+  .arrow-right-inner {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .arrow-h-line { height: 2px; background: #475569; width: 40px; }
+  .arrow-h-head { width: 0; height: 0; border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent; border-left: 8px solid #475569; }
+  .arrow-h-label { color: #64748B; font-size: 9px; text-align: center; }
+
+  /* PHASE LABELS */
+  .phase-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 4px;
+    border-radius: 4px;
+    margin-right: 8px;
+    white-space: nowrap;
+  }
+  .phase-ingest { background: #1E3A5F; color: #93C5FD; }
+  .phase-transform { background: #1A1A3E; color: #A5B4FC; }
+  .phase-cloud { background: #1A2E1A; color: #86EFAC; }
+  .phase-output { background: #1A2A3E; color: #7DD3FC; }
+
+  /* SECTION CONTAINERS */
+  .flow-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 0;
+  }
+
+  /* MAIN LAYOUT */
+  .main-flow {
+    display: flex;
+    gap: 16px;
+  }
+  .phase-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 24px;
+    flex-shrink: 0;
+  }
+  .phase-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    padding: 12px 4px;
+    white-space: nowrap;
+  }
+
+  /* BIG LAYOUT: two vertical columns side by side */
+  .big-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    min-width: 900px;
+  }
+
+  .left-pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: 220px;
+  }
+
+  .right-pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: 220px;
+  }
+
+  .connector-middle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    gap: 8px;
+  }
+
+  .full-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .pipe-spacer { height: 8px; }
+
+  .horizontal-bridge {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+  }
+  .hbridge-line { height: 2px; background: linear-gradient(90deg, #475569, #A855F7); flex: 1; }
+  .hbridge-label {
+    background: #2D1B4E;
+    border: 1px solid #A855F7;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #D8B4FE;
+    white-space: nowrap;
+  }
+
+  /* STEP BADGE */
+  .step-num {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #6B21A8;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0F172A;
+  }
+
+  /* CLOUD BOX */
+  .cloud-box {
+    background: #0C2340;
+    border: 2px dashed #3B82F6;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+  }
+  .cloud-box-title {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #0F172A;
+    padding: 2px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #60A5FA;
+    border: 1.5px solid #3B82F6;
+    border-radius: 20px;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    background: #1E293B;
+    border-radius: 10px;
+    border-left: 4px solid;
+    margin-bottom: 12px;
+  }
+  .flow-step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .flow-step-content { flex: 1; }
+  .flow-step-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .flow-step-desc { font-size: 12px; color: #94A3B8; line-height: 1.6; }
+  .flow-step-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .tag {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #E2E8F0;
+    padding: 24px 40px 16px;
+    border-bottom: 1px solid #1E293B;
+  }
+  .section-title span {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  .two-col-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 24px 40px;
+  }
+  .detail-card {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #334155;
+  }
+  .detail-card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #334155;
+  }
+  .detail-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .detail-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .detail-text { color: #CBD5E1; line-height: 1.5; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🧬 ResisTrack — Execution Workflow</h1>
+    <p>AI-Powered AMR Risk Prediction & Infection Control Platform · Team Curelytics · Impact-AI-Thon 2026</p>
+  </div>
+  <div class="badge">Workflow v1.0</div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#3B82F6"></div>Hospital Systems</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#818CF8"></div>Data Transformation</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#A855F7"></div>Security / Auth</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div>AWS Cloud Services</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div>ML / AI Inference</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#06B6D4"></div>Data Storage</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0EA5E9"></div>Clinical Output</div>
+</div>
+
+<!-- STEP-BY-STEP FLOW -->
+<div class="section-title"><span style="background:#6B21A8"></span>End-to-End Execution Flow</div>
+
+<div style="padding: 24px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+
+  <div class="flow-step" style="border-color:#3B82F6">
+    <div class="flow-step-num" style="background:#1E3A5F;color:#93C5FD;">1</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#93C5FD;">Patient Admission Event</div>
+      <div class="flow-step-desc">Patient is admitted to hospital. EHR (Epic/Cerner) generates an ADT A01 (Admit) HL7 v2 message. LIS systems begin streaming lab order events. Pharmacy system records active medication history.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1E3A5F;color:#93C5FD;">EHR</span>
+        <span class="tag" style="background:#1E3A5F;color:#93C5FD;">LIS</span>
+        <span class="tag" style="background:#1E3A5F;color:#93C5FD;">RIS</span>
+        <span class="tag" style="background:#1E3A5F;color:#93C5FD;">HL7 ADT A01</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#818CF8">
+    <div class="flow-step-num" style="background:#1A1A3E;color:#A5B4FC;">2</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#A5B4FC;">Data Gateway & HL7 → FHIR Transformation</div>
+      <div class="flow-step-desc">Messages are received by the Data Gateway Aggregation Layer. Mirth Connect transforms HL7 v2 ADT/ORU/RDE messages into FHIR R4 resource bundles (Patient, Encounter, Observation, MedicationRequest, Condition).</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1A1A3E;color:#A5B4FC;">Mirth Connect</span>
+        <span class="tag" style="background:#1A1A3E;color:#A5B4FC;">FHIR R4</span>
+        <span class="tag" style="background:#1A1A3E;color:#A5B4FC;">HL7 v2 → R4</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#A855F7">
+    <div class="flow-step-num" style="background:#2D1B4E;color:#D8B4FE;">3</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#D8B4FE;">Encrypted Transmission to AWS VPC</div>
+      <div class="flow-step-desc">FHIR bundles are transmitted via TLS 1.3-encrypted channel with Mutual Certificate Authentication over a VPN / AWS Direct Connect private tunnel. The hospital DMZ connects exclusively to the private AWS VPC — no public internet path.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">TLS 1.3</span>
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">Mutual Auth</span>
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">VPN / Direct Connect</span>
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">VPC Private</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#22C55E">
+    <div class="flow-step-num" style="background:#1A2E1A;color:#86EFAC;">4</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#86EFAC;">API Gateway Ingestion & Validation</div>
+      <div class="flow-step-desc">AWS API Gateway + Lambda receives FHIR bundles. Lambda functions validate FHIR schema conformance, de-duplicate resources, and perform PHI tokenization. Valid bundles are routed to AWS HealthLake for persistence.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">API Gateway</span>
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">Lambda</span>
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">Schema Validation</span>
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">De-duplication</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#06B6D4">
+    <div class="flow-step-num" style="background:#1A2A2A;color:#67E8F9;">5</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#67E8F9;">Storage: HealthLake + RDS + S3</div>
+      <div class="flow-step-desc">FHIR R4 patient resources stored in AWS HealthLake (AES-256 encrypted, HIPAA-eligible). Unstructured clinical notes stored in S3. Model outputs and audit logs written to Amazon RDS (PostgreSQL). All PHI encrypted at rest with AWS KMS.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1A2A2A;color:#67E8F9;">HealthLake</span>
+        <span class="tag" style="background:#1A2A2A;color:#67E8F9;">RDS PostgreSQL</span>
+        <span class="tag" style="background:#1A2A2A;color:#67E8F9;">S3</span>
+        <span class="tag" style="background:#1A2A2A;color:#67E8F9;">AES-256 / KMS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#F59E0B">
+    <div class="flow-step-num" style="background:#2D1B00;color:#FCD34D;">6</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#FCD34D;">Feature Engineering Pipeline</div>
+      <div class="flow-step-desc">SageMaker Processing Jobs extract: 47 structured tabular features (lab values, vitals, prior antibiotics, comorbidities), 72-hour temporal time-series tensors of labs + vitals, and ClinicalBERT embeddings of the 3 most recent clinical notes.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">SageMaker Processing</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">Feature Store</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">NLP Extraction</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">Time-Series</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#F59E0B">
+    <div class="flow-step-num" style="background:#2D1B00;color:#FCD34D;">7</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#FCD34D;">AI/ML Ensemble Inference</div>
+      <div class="flow-step-desc">Three models run in parallel on SageMaker: (a) XGBoost produces AMR Risk Score from tabular features, (b) PyTorch LSTM processes time-series vital/lab trends, (c) ClinicalBERT processes unstructured note embeddings. Outputs are ensemble-weighted and calibrated via Platt scaling to a final 0–100 risk score.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">XGBoost</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">PyTorch LSTM</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">ClinicalBERT</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">Ensemble</span>
+        <span class="tag" style="background:#2D1B00;color:#FCD34D;">SHAP</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#A855F7">
+    <div class="flow-step-num" style="background:#2D1B4E;color:#D8B4FE;">8</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#D8B4FE;">Access Control & Authorization Check</div>
+      <div class="flow-step-desc">Before results are surfaced, OAuth 2.0 SMART on FHIR authorization validates the requesting EHR app and clinician identity. AWS IAM RBAC checks confirm the requesting user role has access to the patient's data scope. Access tokens validated via JWT verification.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">OAuth 2.0</span>
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">SMART on FHIR</span>
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">IAM RBAC</span>
+        <span class="tag" style="background:#2D1B4E;color:#D8B4FE;">JWT</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#0EA5E9">
+    <div class="flow-step-num" style="background:#1A2A3E;color:#7DD3FC;">9</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#7DD3FC;">CDS Hook Alert → EHR Workflow</div>
+      <div class="flow-step-desc">CDS Hooks service fires on patient-view and order-sign events. A CDS Card is injected into the clinician's EHR screen (Epic/Cerner) showing: AMR Risk Tier, top-3 SHAP-explained risk factors in plain language, and stewardship recommendation. Clinician can acknowledge, override, or escalate — all actions logged.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">CDS Hooks</span>
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">Epic / Cerner</span>
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">Inline Alert</span>
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">No New Login</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#EC4899">
+    <div class="flow-step-num" style="background:#2D1B4E;color:#F9A8D4;">10</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#F9A8D4;">Multi-Role Notifications</div>
+      <div class="flow-step-desc">Parallel notifications dispatched based on risk tier: Pharmacy team alerted for High/Critical-risk antibiotic stewardship review. Infection Control Officer alerted for Critical-tier MDR organism flags. Hospital-wide trend analytics updated in real-time dashboard. All notifications contain de-identified patient tokens (no PHI in alerts).</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#2D1B4E;color:#F9A8D4;">Pharmacy Alert</span>
+        <span class="tag" style="background:#2D1B4E;color:#F9A8D4;">Infection Control</span>
+        <span class="tag" style="background:#2D1B4E;color:#F9A8D4;">De-identified</span>
+        <span class="tag" style="background:#2D1B4E;color:#F9A8D4;">SNS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#0EA5E9">
+    <div class="flow-step-num" style="background:#1A2A3E;color:#7DD3FC;">11</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#7DD3FC;">Clinical Dashboard & Reporting</div>
+      <div class="flow-step-desc">Authorized users access the ResisTrack web dashboard (React.js / CloudFront) via SMART launch or direct login. Dashboards show: ward-level AMR risk heatmaps, individual patient risk timelines, infection trend analytics, and weekly stewardship reports (PDF/CSV export). Role-based views limit each user to their authorized data scope.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">React Dashboard</span>
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">CloudFront</span>
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">RBAC Views</span>
+        <span class="tag" style="background:#1A2A3E;color:#7DD3FC;">PDF Reports</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-step" style="border-color:#22C55E">
+    <div class="flow-step-num" style="background:#1A2E1A;color:#86EFAC;">12</div>
+    <div class="flow-step-content">
+      <div class="flow-step-title" style="color:#86EFAC;">Continuous Learning & Model Retraining</div>
+      <div class="flow-step-desc">Clinician override actions and culture result confirmations are captured as model feedback. SageMaker Pipelines runs automated monthly retraining on new hospital data. Models pass automated regression tests against a held-out validation set before promotion to production via the SageMaker Model Registry and CodePipeline CI/CD.</div>
+      <div class="flow-step-tags">
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">SageMaker Pipelines</span>
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">Auto Retraining</span>
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">A/B Validation</span>
+        <span class="tag" style="background:#1A2E1A;color:#86EFAC;">Model Registry</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DETAIL CARDS -->
+<div class="section-title"><span style="background:#0369A1"></span>Data Flow Detail by Role</div>
+
+<div class="two-col-detail">
+
+  <div class="detail-card">
+    <h3 style="color:#93C5FD;border-color:#3B82F6;">🏥 Hospital Systems → ResisTrack</h3>
+    <div class="detail-row"><div class="detail-dot" style="background:#3B82F6;"></div><div class="detail-text"><strong>EHR (Epic/Cerner):</strong> Patient demographics, encounter data, clinical notes, medication orders via SMART on FHIR R4 and CDS Hooks</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#3B82F6;"></div><div class="detail-text"><strong>LIS (Lab Information System):</strong> CBC, CMP, culture orders and results, sensitivity test results as HL7 ORU messages</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#3B82F6;"></div><div class="detail-text"><strong>Pharmacy System:</strong> Active and historical antibiotic prescriptions, dosage, route, and duration as HL7 RDE messages</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#3B82F6;"></div><div class="detail-text"><strong>Clinical Monitoring:</strong> Vital sign streams (HR, BP, Temp, SpO2, RR) if HL7 feed is configured</div></div>
+  </div>
+
+  <div class="detail-card">
+    <h3 style="color:#FCD34D;border-color:#F59E0B;">🤖 ML Models — Input/Output</h3>
+    <div class="detail-row"><div class="detail-dot" style="background:#F59E0B;"></div><div class="detail-text"><strong>XGBoost Input:</strong> 47 tabular features — WBC trend, CRP, prior antibiotic classes, age, CCI score, admission unit, ICU flag, culture history</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#F59E0B;"></div><div class="detail-text"><strong>LSTM Input:</strong> 72-hour rolling windows of 8 lab values + 5 vital signs encoded as multi-variate time-series tensors</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#F59E0B;"></div><div class="detail-text"><strong>ClinicalBERT Input:</strong> Last 3 clinical notes tokenized to 512 tokens each; outputs AMR risk embedding vector</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#F59E0B;"></div><div class="detail-text"><strong>Output:</strong> AMR Risk Score (0–100), Risk Tier, per-antibiotic-class resistance probability, top-5 SHAP features</div></div>
+  </div>
+
+  <div class="detail-card">
+    <h3 style="color:#D8B4FE;border-color:#A855F7;">🔒 Security Controls at Each Boundary</h3>
+    <div class="detail-row"><div class="detail-dot" style="background:#A855F7;"></div><div class="detail-text"><strong>Hospital → Cloud:</strong> TLS 1.3 + mutual certificate authentication + VPN/Direct Connect (no public internet)</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#A855F7;"></div><div class="detail-text"><strong>API Layer:</strong> API Gateway + Lambda JWT validation on every request; rate limiting per hospital tenant</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#A855F7;"></div><div class="detail-text"><strong>Storage:</strong> AES-256 at rest (KMS), per-tenant encryption keys, no cross-tenant data access possible</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#A855F7;"></div><div class="detail-text"><strong>EHR Output:</strong> OAuth 2.0 / SMART on FHIR with scope-limited access tokens; IAM RBAC per user role</div></div>
+  </div>
+
+  <div class="detail-card">
+    <h3 style="color:#7DD3FC;border-color:#0EA5E9;">👩‍⚕️ Clinician-Facing Output Details</h3>
+    <div class="detail-row"><div class="detail-dot" style="background:#0EA5E9;"></div><div class="detail-text"><strong>CDS Hook Card (in EHR):</strong> Appears in EHR UI on admission/antibiotic-order — AMR Risk Tier, top risk factors, stewardship action</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#0EA5E9;"></div><div class="detail-text"><strong>Web Dashboard:</strong> Ward heatmap, patient risk timeline, trend analytics, outbreak detection alerts for infection control</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#0EA5E9;"></div><div class="detail-text"><strong>Pharmacy View:</strong> High/Critical patient list for stewardship review with recommended de-escalation options</div></div>
+    <div class="detail-row"><div class="detail-dot" style="background:#0EA5E9;"></div><div class="detail-text"><strong>Automated Reports:</strong> Weekly PDF/CSV stewardship reports auto-generated and delivered to infection control officers</div></div>
+  </div>
+
+</div>
+
+<div style="padding: 20px 40px; text-align: center; color: #475569; font-size: 11px; border-top: 1px solid #1E293B; margin-top: 8px;">
+  ResisTrack Workflow Diagram v1.0 · Team Curelytics · Impact-AI-Thon 2026 · CONFIDENTIAL
+</div>
+
+</body>
+</html>
