@@ -38,7 +38,7 @@ DEFAULT_PARAMS: dict[str, Any] = {
     "reg_alpha": 0.1,
     "reg_lambda": 1.0,
     "objective": "binary:logistic",
-    "eval_metric": "auprc",
+    "eval_metric": "aucpr",
     "random_state": RANDOM_STATE,
     "use_label_encoder": False,
 }
