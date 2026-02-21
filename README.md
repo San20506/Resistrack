@@ -82,3 +82,61 @@ Start with `roadmap/00_context.md` for project context, then `roadmap/01_roadmap
 ## Team
 
 Curelytics, Impact-AI-Thon 2026
+
+## Getting Started (Local Development)
+
+The codebase contains a functional Python backend logic (simulated) and a React frontend. The AWS infrastructure is defined in CDK but not deployed in this local demo.
+
+### Prerequisites
+
+*   Python 3.11+
+*   Node.js 18+ (for frontend)
+*   Unix-like environment (Linux/macOS) recommended for shell scripts.
+
+### Installation
+
+1.  **Clone the repository** (if you haven't already).
+2.  **Run the setup script**:
+    ```bash
+    ./setup.sh
+    ```
+    This will:
+    *   Create a Python virtual environment (`.venv`).
+    *   Install Python dependencies from `requirements.txt`.
+    *   Install the `resistrack` package in editable mode.
+    *   Install frontend dependencies in `dashboard/`.
+
+### Running the Demo (Backend Logic)
+
+To verify the core logic (SageMaker Endpoint simulation and CDS Hooks service) without deploying to AWS:
+
+1.  **Activate the virtual environment**:
+    ```bash
+    source .venv/bin/activate
+    ```
+2.  **Run the demo script**:
+    ```bash
+    python demo.py
+    ```
+    You should see output demonstrating a simulated AMR risk prediction and a Clinical Decision Support hook response.
+
+### Running the Frontend
+
+To start the React dashboard locally:
+
+1.  Navigate to the dashboard directory:
+    ```bash
+    cd dashboard
+    ```
+2.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+3.  Open your browser at the URL provided (usually `http://localhost:5173`).
+    *   *Note:* The frontend is configured to point to `/api/v1`, but no backend server is running in this demo mode. The frontend will load but API calls will fail or need to be mocked.
+
+### Project Status
+
+*   **Backend:** Core logic for inference and hooks is implemented in `src/resistrack`. Real ML models (XGBoost/LSTM) are not included in the repo; the demo uses a mock predictor.
+*   **Frontend:** React dashboard shell is implemented.
+*   **Infrastructure:** AWS CDK constructs are in `infra/` but require AWS credentials and deployment to function.
