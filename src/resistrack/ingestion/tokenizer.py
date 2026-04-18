@@ -129,6 +129,15 @@ class PHITokenizer:
                 for i in value
                 if isinstance(i, dict)
             ]
+        # Handle 18 HIPAA identifiers specifically
+        if field_name in (
+            "name", "address", "birthDate", "telecom", "ssn", "mrn",
+            "health_plan_id", "account_number", "certificate_license",
+            "vehicle_id", "device_id", "url", "ip_address", "biometric",
+            "photo", "other_unique_id",
+        ):
+            return "[REDACTED]"
+
         return "[REDACTED]"
 
     @staticmethod

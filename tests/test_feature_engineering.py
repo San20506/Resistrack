@@ -124,10 +124,10 @@ class TestFeatureConfig:
 class TestFeatureNames:
     def test_total_feature_count(self) -> None:
         assert len(ALL_FEATURE_NAMES) == EXPECTED_FEATURE_COUNT
-        assert EXPECTED_FEATURE_COUNT == 47
+        assert EXPECTED_FEATURE_COUNT == 49
 
     def test_lab_feature_count(self) -> None:
-        assert len(LAB_FEATURE_NAMES) == 12
+        assert len(LAB_FEATURE_NAMES) == 14
 
     def test_med_feature_count(self) -> None:
         assert len(MED_FEATURE_NAMES) == 10

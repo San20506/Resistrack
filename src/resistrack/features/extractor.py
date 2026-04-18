@@ -59,13 +59,15 @@ class ExtractedFeatures:
         return len(self.to_flat_dict())
 
 
-# Lab feature names (12)
+# Lab feature names (14)
 LAB_FEATURE_NAMES: list[str] = [
     "wbc_latest",
     "wbc_trend_slope",
     "wbc_max_72h",
     "crp_latest",
     "crp_trend_slope",
+    "creatinine_latest",
+    "creatinine_trend_slope",
     "procalcitonin_latest",
     "procalcitonin_elevated",
     "lactate_latest",
@@ -134,7 +136,7 @@ ALL_FEATURE_NAMES: list[str] = (
     + VITAL_FEATURE_NAMES
 )
 
-EXPECTED_FEATURE_COUNT = 47
+EXPECTED_FEATURE_COUNT = 49
 
 
 class FeatureExtractor:
@@ -177,6 +179,7 @@ class FeatureExtractor:
 
         observations = self._get_resources(bundle, "Observation")
         wbc_values: list[float] = []
+        creatinine_values: list[float] = []
 
         for obs in observations:
             code = self._get_observation_code(obs)
@@ -191,6 +194,9 @@ class FeatureExtractor:
                 features["wbc_latest"] = value
             elif code in ("1988-5", "CRP"):
                 features["crp_latest"] = value
+            elif code in ("2160-0", "CREAT", "CREATININE"):
+                creatinine_values.append(value)
+                features["creatinine_latest"] = value
             elif code in ("33959-8", "PCT"):
                 features["procalcitonin_latest"] = value
                 features["procalcitonin_elevated"] = 1.0 if value > 0.5 else 0.0
@@ -205,6 +211,10 @@ class FeatureExtractor:
             features["wbc_max_72h"] = max(wbc_values)
             if len(wbc_values) >= 2:
                 features["wbc_trend_slope"] = wbc_values[-1] - wbc_values[0]
+
+        if creatinine_values:
+            if len(creatinine_values) >= 2:
+                features["creatinine_trend_slope"] = creatinine_values[-1] - creatinine_values[0]
 
         return features
 
